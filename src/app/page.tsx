@@ -7,6 +7,8 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, Lock, Globe, FileCode } from "lucide-react";
 
+import { FileText } from "lucide-react";
+
 interface Paste {
     id: string;
     title: string | null;
@@ -14,12 +16,22 @@ interface Paste {
     language: string;
     is_public: boolean;
     author: string;
+    mime_type?: string;
+    storage_path?: string;
 }
 
 export default function Home() {
     const { user, loading: authLoading, credentials } = useAuth();
     const [pastes, setPastes] = useState<Paste[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const getFileIcon = (paste: Paste) => {
+        if (paste.mime_type?.includes('pdf')) return <FileText className="w-5 h-5 text-red-500" />;
+        if (paste.mime_type?.includes('word')) return <FileText className="w-5 h-5 text-blue-500" />;
+        if (paste.mime_type?.includes('sheet')) return <FileText className="w-5 h-5 text-green-500" />;
+        if (paste.language === 'html') return <Globe className="w-5 h-5 text-blue-400" />;
+        return <FileCode className="w-5 h-5 text-primary" />;
+    }
 
     useEffect(() => {
         const fetchPastes = async () => {
@@ -35,7 +47,7 @@ export default function Home() {
                 } else {
                     const { data, error } = await supabase
                         .from("pastes")
-                        .select("id, title, created_at, language, is_public, author")
+                        .select("*")
                         .eq("is_public", true)
                         .order("created_at", { ascending: false });
 
@@ -97,7 +109,7 @@ export default function Home() {
                             >
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="p-2 rounded-md bg-secondary text-secondary-foreground group-hover:scale-110 transition-transform">
-                                        <FileCode className="w-5 h-5" />
+                                        {getFileIcon(paste)}
                                     </div>
                                     {paste.is_public ? <Globe className="w-4 h-4 text-muted-foreground" /> : <Lock className="w-4 h-4 text-emerald-400" />}
                                 </div>
@@ -108,7 +120,7 @@ export default function Home() {
 
                                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                                     <span>{formatDistanceToNow(new Date(paste.created_at), { addSuffix: true })}</span>
-                                    <span className="bg-white/5 px-2 py-1 rounded text-white/70">{paste.language}</span>
+                                    <span className="bg-white/5 px-2 py-1 rounded text-foreground/70">{paste.language}</span>
                                 </div>
                             </Link>
                         ))
