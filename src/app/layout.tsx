@@ -12,12 +12,16 @@ import { Loader2 } from "lucide-react";
 
 const inter = Inter({ subsets: ["latin"] });
 
+import { EndfieldWrapper } from "@/components/EndfieldUI";
+
 // Inner component to access Auth Context
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
     const { user, credentials } = useAuth();
     const router = useRouter();
     const [isDragging, setIsDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
+
+    // Note: We need to access store inside component
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -52,35 +56,36 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <div
-            className="min-h-screen relative"
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-        >
-            <Navbar />
+                    </div >
+                </div >
+            )
+}
+
+{/* Uploading Overlay */ }
+<EndfieldWrapper>
+    <div
+        className={`flex min-h-screen flex-col items-center justify-between ${isDragging ? "border-4 border-dashed border-primary" : ""}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+    >
+        <Navbar />
+        <main className="flex flex-1 flex-col items-center justify-center w-full max-w-4xl px-4 py-8">
             {children}
+        </main>
 
-            {/* Drag Overlay */}
-            {isDragging && (
-                <div className="fixed inset-0 bg-primary/20 backdrop-blur-sm z-[9999] flex items-center justify-center border-4 border-primary border-dashed m-4 rounded-xl pointer-events-none">
-                    <div className="text-2xl font-bold text-white bg-black/50 px-6 py-4 rounded-xl">
-                        Drop file to Upload
-                    </div>
+        {/* Uploading Overlay */}
+        {uploading && (
+            <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-xl border border-white/10">
+                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                    <span className="text-lg font-medium">Uploading...</span>
                 </div>
-            )}
-
-            {/* Uploading Overlay */}
-            {uploading && (
-                <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-xl border border-white/10">
-                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                        <span className="text-lg font-medium">Uploading...</span>
-                    </div>
-                </div>
-            )}
-        </div>
-    )
+            </div>
+        )}
+    </div>
+</EndfieldWrapper>
+    );
 }
 
 export default function RootLayout({

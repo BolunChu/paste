@@ -7,6 +7,7 @@ import { uploadFile } from "@/lib/upload";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
+import { TestModeToggle } from "./TestModeToggle";
 
 export default function Navbar() {
     const { user, credentials, logout } = useAuth();
@@ -41,6 +42,7 @@ export default function Navbar() {
                     <span>Pastebin</span>
                 </Link>
                 <div className="flex items-center gap-4">
+                    <TestModeToggle />
                     <ThemeToggle />
                     <Link href="/" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
                         <span className="hidden sm:inline">Dashboard</span>
