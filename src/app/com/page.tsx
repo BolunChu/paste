@@ -17,17 +17,33 @@ export default function LiteModePage() {
     const [error, setError] = useState("");
 
     useEffect(() => {
+        // Use native fetch to avoid heavy Supabase client library on old devices
         const fetchPublicPastes = async () => {
             try {
-                const { data, error } = await supabase
-                    .from("pastes")
-                    .select("id, title, created_at, description, language, author")
-                    .eq("is_public", true)
-                    .order("created_at", { ascending: false })
-                    .limit(50);
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+                const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-                if (error) throw error;
-                if (data) setPastes(data);
+                if (!supabaseUrl || !supabaseKey) {
+                    throw new Error("Missing Supabase Config");
+                }
+
+                // Construct REST URL
+                const url = `${supabaseUrl}/rest/v1/pastes?select=id,title,created_at,description,language,author&is_public=eq.true&order=created_at.desc&limit=50`;
+
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': supabaseKey,
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                setPastes(data);
             } catch (err: any) {
                 console.error(err);
                 setError(err.message || "Failed to load");
@@ -40,19 +56,23 @@ export default function LiteModePage() {
 
     const safeDate = (dateStr: string) => {
         try {
-            return new Date(dateStr).toLocaleDateString();
+            // Very defensive date parsing for old browsers
+            if (!dateStr) return "-";
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
         } catch (e) {
             return dateStr;
         }
     }
 
     return (
-        <div style={{ padding: '20px', fontFamily: 'monospace', maxWidth: '800px', margin: '0 auto', fontSize: '14px', lineHeight: '1.5' }}>
+        <div style={{ padding: '20px', fontFamily: '"Courier New", Courier, monospace', maxWidth: '800px', margin: '0 auto', fontSize: '14px', lineHeight: '1.5', color: '#333' }}>
             <h1 style={{ fontSize: '24px', marginBottom: '10px' }}>Pastebin Lite</h1>
-            <p style={{ fontSize: '12px', color: '#666' }}>Legacy Mode (iOS 12+)</p>
+            <p style={{ fontSize: '12px', color: '#666' }}>Legacy Mode (Native Fetch)</p>
             <hr style={{ margin: '20px 0', border: '0', borderTop: '1px solid #ccc' }} />
 
-            <a href="/" style={{ marginBottom: '20px', display: 'inline-block', textDecoration: 'none', color: '#0366d6' }}>&larr; Back to Full Site</a>
+            <a href="/" style={{ marginBottom: '20px', display: 'inline-block', textDecoration: 'none', color: '#0366d6' }}>&larr; Main Site</a>
 
             {loading ? (
                 <p>Loading data...</p>
