@@ -63,6 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             p_hash: hash
         });
 
+        if (error) {
+            console.error("Login RPC Error:", error);
+        }
+
         if (data === true) {
             setUser({ username });
             setCredentials({ username, hash });
